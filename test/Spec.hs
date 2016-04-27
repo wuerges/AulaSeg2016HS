@@ -8,14 +8,17 @@ main :: IO ()
 main = do
   defaultMain tests
 
-tests = [
-  testGroup "\nTest Ceasar for Symbol" [
-    testProperty "prop1" testCeasarSymbolWithNegativeKey,
-    testProperty "prop2" testCeasarSymbolWithMultipleKey,
-    testProperty "prop3" testCeasarSymbolWithComplementKey
-                                     ]
-        ]
+tests =
+  [ makeCypherTestGroup "\n ceasarSymbol" ceasarSymbol
+  , makeCypherTestGroup "\n ceasar" ceasar
+  ]
 
-testCeasarSymbolWithNegativeKey s k = ceasar (ceasar s (-k)) k == s
-testCeasarSymbolWithMultipleKey n s k = ceasar s (n * 256 + k) == ceasar s k
-testCeasarSymbolWithComplementKey s k = ceasar (ceasar s k) (256 - k) == s
+testNegativeKey cypher s k   = cypher (cypher s (-k)) k      == s
+testMultipleKey cypher n s k = cypher s (n * 256 + k)        == cypher s k
+testComplementKey cypher s k = cypher (cypher s k) (256 - k) == s
+
+makeCypherTestGroup name cypher =
+  testGroup name [ testProperty "negative" (testNegativeKey cypher)
+                 , testProperty "multiple" (testMultipleKey cypher)
+                 , testProperty "complement" (testComplementKey cypher)
+                 ]
