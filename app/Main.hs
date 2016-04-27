@@ -6,6 +6,7 @@ import Lib
 
 import Control.Monad
 import System.Environment
+import System.Exit
 
 import Control.Monad.Trans.Resource
 import Data.Conduit
@@ -24,10 +25,20 @@ ceasarConduit k = CL.map (ceasarSymbol k)
 
 main :: IO ()
 main = do
-  [key, inputF, outputF] <- getArgs
-  runResourceT $
-    CB.sourceFile inputF $$ wrapConduit (ceasarConduit (read key)) =$ CB.sinkFile outputF
-
+  getArgs >>= parse
 
 wrapConduit ::  Conduit Symbol (ResourceT IO) Symbol -> Conduit ByteString (ResourceT IO) ByteString
 wrapConduit c = CL.concatMap unpack =$= c =$= CL.map singleton
+
+parse :: [String] -> IO ()
+
+parse ["ceasar", key, inputF, outputF] =
+  runResourceT $
+    CB.sourceFile inputF $$ wrapConduit (ceasarConduit (read key)) =$ CB.sinkFile outputF
+
+parse _ = usage >> exit
+
+usage   = putStrLn "Usage: cyphers ceasar <key> <inputFile> <outputFile>"
+version = putStrLn "Haskell cyphers 0.1"
+exit    = exitWith ExitSuccess
+die     = exitWith (ExitFailure 1)
