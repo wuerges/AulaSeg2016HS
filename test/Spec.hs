@@ -13,9 +13,9 @@ tests =
   , makeCypherTestGroup "\n ceasar" ceasar
   ]
 
-testNegativeKey cypher s k   = cypher (cypher s (-k)) k      == s
-testMultipleKey cypher n s k = cypher s (n * 256 + k)        == cypher s k
-testComplementKey cypher s k = cypher (cypher s k) (256 - k) == s
+testNegativeKey cypher k s   = cypher k (cypher (-k) s)      == s
+testMultipleKey cypher n k s = cypher (n * 256 + k) s        == cypher k s
+testComplementKey cypher k s = cypher (256 - k) (cypher k s) == s
 
 makeCypherTestGroup name cypher =
   testGroup name [ testProperty "negative" (testNegativeKey cypher)
