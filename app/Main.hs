@@ -35,9 +35,10 @@ parse :: [String] -> IO ()
 parse [mode, key, inputF, outputF] =
   runResourceT $ CB.sourceFile inputF $$ wrapConduit conduit =$ CB.sinkFile outputF
     where conduit = case mode of
-            "ceasar" -> ceasarConduit $ read key
+            "-v"        -> version
+            "ceasar"    -> ceasarConduit $ read key
             "ceasardec" -> ceasarConduit $ negate $ read key
-            _ -> error "Unknown mode"
+            _           -> error "Unknown mode"
 
 
 parse _ = usage >> exit
