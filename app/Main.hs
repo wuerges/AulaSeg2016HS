@@ -33,12 +33,14 @@ wrapConduit c = CL.concatMap unpack =$= c =$= CL.map singleton
 parse :: [String] -> IO ()
 
 parse [mode, key, inputF, outputF] =
-  runResourceT $ CB.sourceFile inputF $$ wrapConduit conduit =$ CB.sinkFile outputF
-    where conduit = case mode of
-            "-v"        -> version
-            "ceasar"    -> ceasarConduit $ read key
-            "ceasardec" -> ceasarConduit $ negate $ read key
-            _           -> error "Unknown mode"
+    case mode of
+      "-v"        -> version
+      "ceasar"    -> runConduit $ ceasarConduit $ read key
+      "ceasardec" -> runConduit $ ceasarConduit $ negate $ read key
+      _           -> error "Unknown mode"
+
+  where
+    runConduit conduit = runResourceT $ CB.sourceFile inputF $$ wrapConduit conduit =$ CB.sinkFile outputF
 
 
 parse _ = usage >> exit
