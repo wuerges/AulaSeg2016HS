@@ -20,14 +20,14 @@ import Data.Word ( Word8 )
 import Data.Maybe
 
 -- Functions related to Conduit
-ceasarConduit :: Int -> Conduit Symbol (ResourceT IO) Symbol
+ceasarConduit :: Symbol a => Int -> Conduit a (ResourceT IO) a
 ceasarConduit k = CL.map (ceasarSymbol k)
 
 main :: IO ()
 main = do
   getArgs >>= parse
 
-wrapConduit ::  Conduit Symbol (ResourceT IO) Symbol -> Conduit ByteString (ResourceT IO) ByteString
+wrapConduit :: Conduit Word8 (ResourceT IO) Word8 -> Conduit ByteString (ResourceT IO) ByteString
 wrapConduit c = CL.concatMap unpack =$= c =$= CL.map singleton
 
 parse :: [String] -> IO ()
