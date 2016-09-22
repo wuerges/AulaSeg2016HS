@@ -22,10 +22,8 @@ import Data.Maybe
 -- Functions related to Conduit
 cipherToConduit :: a -> Cypher a -> Conduit ByteString (ResourceT IO) ByteString
 cipherToConduit k c = do
-  mbs <- await
-  case mbs of
-    Nothing -> yield empty
-    Just bs -> yield $ pack $ c k $ unpack bs
+  mbs <- CC.fold
+  yield $ pack $ c k $ unpack mbs
 
 main :: IO ()
 main = do
