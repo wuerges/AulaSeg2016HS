@@ -15,32 +15,34 @@ import qualified Data.Conduit.List as CL
 import qualified Data.Conduit.Combinators as CC
 import qualified Data.Conduit.Binary as CB
 
-import Data.ByteString ( ByteString, unpack, pack, singleton )
+import Data.ByteString ( ByteString, unpack, pack, empty )
 import Data.Word ( Word8 )
 import Data.Maybe
 
 -- Functions related to Conduit
-ceasarConduit :: Symbol a => Int -> Conduit a (ResourceT IO) a
-ceasarConduit k = CL.map (ceasarSymbol k)
+cipherToConduit :: a -> Cypher a -> Conduit ByteString (ResourceT IO) ByteString
+cipherToConduit k c = do
+  mbs <- await
+  case mbs of
+    Nothing -> yield empty
+    Just bs -> yield $ pack $ c k $ unpack bs
 
 main :: IO ()
 main = do
   getArgs >>= parse
-
-wrapConduit :: Conduit Word8 (ResourceT IO) Word8 -> Conduit ByteString (ResourceT IO) ByteString
-wrapConduit c = CL.concatMap unpack =$= c =$= CL.map singleton
 
 parse :: [String] -> IO ()
 
 parse [mode, key, inputF, outputF] =
     case mode of
       "-v"        -> version
-      "ceasar"    -> runConduit $ ceasarConduit $ read key
-      "ceasardec" -> runConduit $ ceasarConduit $ negate $ read key
+      "ceasar"    -> runConduit $ cipherToConduit key (ceasar . ceasarKey)
+      "ceasardec" -> runConduit $ cipherToConduit key (ceasar . ceasarInverseKey . ceasarKey)
       _           -> error "Unknown mode"
 
   where
-    runConduit conduit = runResourceT $ CB.sourceFile inputF $$ wrapConduit conduit =$ CB.sinkFile outputF
+    runConduit :: Conduit ByteString (ResourceT IO) ByteString -> IO ()
+    runConduit conduit = runResourceT $ CB.sourceFile inputF $$ conduit =$ CB.sinkFile outputF
 
 
 parse _ = usage >> exit
