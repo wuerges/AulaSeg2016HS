@@ -15,7 +15,7 @@ import qualified Data.Conduit.List as CL
 import qualified Data.Conduit.Combinators as CC
 import qualified Data.Conduit.Binary as CB
 
-import Data.ByteString ( ByteString, unpack, pack, empty )
+import Data.ByteString ( ByteString, unpack, pack, empty, readFile )
 import Data.Word ( Word8 )
 import Data.Maybe
 
@@ -36,6 +36,10 @@ parse [mode, key, inputF, outputF] =
       "-v"        -> version
       "ceasar"    -> runConduit $ cipherToConduit key (ceasar . ceasarKey)
       "ceasardec" -> runConduit $ cipherToConduit key (ceasar . ceasarInverseKey . ceasarKey)
+      "subs"      -> do sk <- Data.ByteString.readFile key
+                        runConduit $ cipherToConduit (unpack sk) substitution
+      "subsdec"   -> do sk <- Data.ByteString.readFile key
+                        runConduit $ cipherToConduit (subsInverseKey . unpack $ sk) substitution
       _           -> error "Unknown mode"
 
   where
