@@ -34,7 +34,7 @@ ceasarSymbol :: Int -> Word8 -> Word8
 ceasarSymbol k s = s .+. k
 
 subsInverseKey :: [Word8] -> [Word8]
-subsInverseKey k = map fst $ sort $ zip k [0..]
+subsInverseKey k = map snd $ sort $ zip k [0..]
 
 substitution :: Cypher [Word8]
 substitution k t = map lookup_k t
